@@ -2,6 +2,7 @@ from turtle import Screen, Turtle
 from ball import Ball
 from paddle import Paddle
 from block import Block
+from heart import Heart
 import time
 
 # Setup screen
@@ -15,6 +16,16 @@ screen.addshape("img/red.gif")
 screen.addshape("img/blue.gif")
 screen.addshape("img/green.gif")
 screen.addshape("img/yellow.gif")
+screen.addshape("img/heart.gif")
+
+# Setup pen for writing messages on screen
+pen = Turtle()
+pen.penup()
+pen.hideturtle()
+pen.goto(0,0)
+pen.color("white")
+
+pen.write("Press ↑ to start", align="center", font=("Courier", 18, "bold"))
 
 ball = Ball((0,-220))
 paddle = Paddle((0,-250))
@@ -45,7 +56,6 @@ screen.onkeyrelease(release_right, "Right")
 screen.onkeypress(hold_left, "Left")
 screen.onkeyrelease(release_left, "Left")
 
-
 # Creating blocks
 blocks = []
 start_x = -220
@@ -55,25 +65,57 @@ columns = 7
 x_spacing = 70
 y_spacing = 35
 colors = ["img/blue.gif","img/red.gif","img/yellow.gif","img/green.gif"]
-for row in range(rows):
-    for col in range(columns):
-        x = start_x + col * x_spacing
-        y = start_y - row * y_spacing
-        color = colors[row]
-        block = Block(position=(x, y), color=color)
-        blocks.append(block)
 
+def reset_blocks():
+    global blocks
+    for block in blocks:
+        block.hideturtle()
+        block.goto(1000, 1000)  # Move them offscreen just in case
+    blocks = []  # Clear the old list
+
+    for row in range(rows):
+        for col in range(columns):
+            x = start_x + col * x_spacing
+            y = start_y - row * y_spacing
+            color = colors[row]
+            block = Block(position=(x, y), color=color)
+            blocks.append(block)
+
+reset_blocks()
+
+# Display HP
+hearts_list = []
+hearts = 3
+heart_start_x = -280
+
+def reset_hearts():
+    global hearts, hearts_list
+    for heart in hearts_list:
+        heart.hideturtle()
+        heart.goto(1000, 1000)
+    hearts_list = []
+
+    hearts = 3
+    heart_start_x = -280
+    for i in range(1, hearts + 1):
+        heart = Heart((heart_start_x, 300), "img/heart.gif")
+        hearts_list.append(heart)
+        heart_start_x += 40
+
+reset_hearts()
+
+# Start Game with UP arrow
 game_started = False
-
 def start_game():
     global game_started
     game_started = True
-
 screen.onkeypress(start_game, "Up")
 
-
 def game_loop():
+    global game_started
     if game_started:
+        
+        pen.clear()
         ball.move()
 
         if right_pressed:
@@ -96,7 +138,6 @@ def game_loop():
             ball.redirect_from_paddle(paddle)
 
         # Block collision
-
         for block in blocks[:]:
             if (
                 abs(ball.xcor() - block.xcor()) < 45 and  # 35 block width + 10 ball radius
@@ -105,11 +146,41 @@ def game_loop():
                 blocks.remove(block)
                 block.hideturtle()
                 block.goto(1000, 1000)
-
-                ball.x_move *= 1.025
-                ball.y_move *= 1.025
+                ball.x_move *= 1.03
+                ball.y_move *= 1.03
                 ball.bounce_y()
                 break
+                    
+        # Lose
+        global hearts, hearts_list          
+        if ball.ycor() < -300:
+            game_started = False
+            ball.reset()
+            paddle.reset()
+
+            if hearts > 1:                  
+                hearts -= 1
+                # remove one heart icon
+                lost_heart = hearts_list.pop()  
+                lost_heart.hideturtle()
+                lost_heart.goto(1000, 1000)
+            else:
+                pen.write("Game Over!\nPress ↑ to Play again", align="center", font=("Courier", 18, "bold"))
+                reset_blocks()
+                reset_hearts()
+
+        # Win
+        if len(blocks) == 0:
+            game_started = False
+            ball.reset()
+            paddle.reset()
+            pen.write("You Won!\nPress ↑ to Play again", align="center", font=("Courier", 18, "bold"))
+            reset_blocks()
+            reset_hearts()
+            
+
+
+                
 
     screen.update()
     screen.ontimer(game_loop, 16)  # About 60 FPS
