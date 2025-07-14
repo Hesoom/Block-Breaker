@@ -1,13 +1,14 @@
 from turtle import Turtle
 
 class Ball(Turtle):
-    def __init__(self):
+    def __init__(self,position):
         super().__init__()
         self.color("white")
         self.shape("circle")
         self.penup()
-        self.x_move = -1
-        self.y_move = 2
+        self.goto(position)
+        self.x_move = 4
+        self.y_move = 11
         self.move_speed = 0.1
 
     def move(self):
@@ -17,7 +18,6 @@ class Ball(Turtle):
 
     def bounce_y(self):
         self.y_move *= -1
-
 
     def bounce_x(self):
         self.x_move *= -1

@@ -16,7 +16,7 @@ screen.addshape("img/blue.gif")
 screen.addshape("img/green.gif")
 screen.addshape("img/yellow.gif")
 
-ball = Ball()
+ball = Ball((0,-220))
 paddle = Paddle((0,-250))
 
 # Paddle smooth moving
@@ -45,6 +45,7 @@ screen.onkeyrelease(release_right, "Right")
 screen.onkeypress(hold_left, "Left")
 screen.onkeyrelease(release_left, "Left")
 
+
 # Creating blocks
 blocks = []
 start_x = -220
@@ -62,45 +63,57 @@ for row in range(rows):
         block = Block(position=(x, y), color=color)
         blocks.append(block)
 
-game_is_on = True
-counter = 0
-time_sleep = 0.005
+game_started = False
 
-while game_is_on:
-    screen.update()
-    time.sleep(time_sleep)
-    ball.move()
+def start_game():
+    global game_started
+    game_started = True
 
-    if right_pressed:
-        paddle.move(1)
-    if left_pressed:
-        paddle.move(-1)
+screen.onkeypress(start_game, "Up")
 
-    # Detect collision with upper wall
-    if ball.ycor() > 320:
-        ball.bounce_y()
-    # Detect collision with left and right side walls
-    if ball.xcor() > 320 or ball.xcor() < -320:
-        ball.bounce_x()
-    # Detect collision with paddle
-    if (
-        abs(ball.xcor() - paddle.xcor()) < 50 and
-        abs(ball.ycor() - paddle.ycor()) < 20 and
-        ball.y_move < 0  # Only bounce if ball is moving downward
-    ):
-        ball.redirect_from_paddle(paddle)
 
-    # Detect collision with blocks
-    for block in blocks[:]:
-        if ball.distance(block) < 40:
-            blocks.remove(block)
-            block.hideturtle()
-            block.goto(1000, 1000)
-            counter += 1
-            if counter % 2 == 0:
-                time_sleep *= 0.91
+def game_loop():
+    if game_started:
+        ball.move()
+
+        if right_pressed:
+            paddle.move(direction=1)
+        if left_pressed:
+            paddle.move(direction=-1)
+
+        # Wall collision
+        if ball.ycor() > 320:
             ball.bounce_y()
-            break
+        if ball.xcor() > 320 or ball.xcor() < -320:
+            ball.bounce_x()
 
+        # Paddle collision
+        if (
+            abs(ball.xcor() - paddle.xcor()) < 50 and
+            abs(ball.ycor() - paddle.ycor()) < 20 and
+            ball.y_move < 0
+        ):
+            ball.redirect_from_paddle(paddle)
+
+        # Block collision
+
+        for block in blocks[:]:
+            if (
+                abs(ball.xcor() - block.xcor()) < 45 and  # 35 block width + 10 ball radius
+                abs(ball.ycor() - block.ycor()) < 25      # 15 block height + 10 ball radius
+            ):
+                blocks.remove(block)
+                block.hideturtle()
+                block.goto(1000, 1000)
+
+                ball.x_move *= 1.025
+                ball.y_move *= 1.025
+                ball.bounce_y()
+                break
+
+    screen.update()
+    screen.ontimer(game_loop, 16)  # About 60 FPS
+
+game_loop()
 
 screen.exitonclick()
