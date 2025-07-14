@@ -4,7 +4,7 @@ from paddle import Paddle
 from block import Block
 import time
 
-
+# Setup screen
 screen = Screen()
 screen.bgcolor("#1A1A1A")
 screen.setup(width=650, height=650)
@@ -19,6 +19,7 @@ screen.addshape("img/yellow.gif")
 ball = Ball()
 paddle = Paddle((0,-250))
 
+# Paddle smooth moving
 right_pressed = False
 left_pressed = False
 
