@@ -6,27 +6,53 @@ import time
 
 
 screen = Screen()
-screen.bgcolor("#121212")
-screen.setup(width=600, height=600)
+screen.bgcolor("#1A1A1A")
+screen.setup(width=650, height=650)
 screen.title("Breakout")
 screen.tracer(0)
+screen.addshape("img/paddle.gif")
+screen.addshape("img/red.gif")
+screen.addshape("img/blue.gif")
+screen.addshape("img/green.gif")
+screen.addshape("img/yellow.gif")
 
 ball = Ball()
 paddle = Paddle((0,-250))
 
+right_pressed = False
+left_pressed = False
+
+def hold_right():
+    global right_pressed
+    right_pressed = True
+
+def release_right():
+    global right_pressed
+    right_pressed = False
+
+def hold_left():
+    global left_pressed
+    left_pressed = True
+
+def release_left():
+    global left_pressed
+    left_pressed = False
+
 screen.listen()
-screen.onkey(paddle.go_right, "Right")
-screen.onkey(paddle.go_left, "Left")
+screen.onkeypress(hold_right, "Right")
+screen.onkeyrelease(release_right, "Right")
+screen.onkeypress(hold_left, "Left")
+screen.onkeyrelease(release_left, "Left")
 
 # Creating blocks
 blocks = []
-start_x = -240
+start_x = -220
 start_y = 260
 rows = 4
 columns = 7
-x_spacing = 80
-y_spacing = 40
-colors = ["#3e51b5","#b53e3e","#b5b13e","#54a644"]
+x_spacing = 70
+y_spacing = 35
+colors = ["img/blue.gif","img/red.gif","img/yellow.gif","img/green.gif"]
 for row in range(rows):
     for col in range(columns):
         x = start_x + col * x_spacing
@@ -37,34 +63,43 @@ for row in range(rows):
 
 game_is_on = True
 counter = 0
-time_sleep = 0.008
+time_sleep = 0.005
 
 while game_is_on:
     screen.update()
     time.sleep(time_sleep)
     ball.move()
 
+    if right_pressed:
+        paddle.move(1)
+    if left_pressed:
+        paddle.move(-1)
+
     # Detect collision with upper wall
-    if ball.ycor() > 280:
+    if ball.ycor() > 320:
         ball.bounce_y()
     # Detect collision with left and right side walls
-    if ball.xcor() > 280 or ball.xcor() < -280:
+    if ball.xcor() > 320 or ball.xcor() < -320:
         ball.bounce_x()
     # Detect collision with paddle
-    if ball.distance(paddle) < 50 and ball.ycor() < - 230:
-        ball.bounce_y()
+    if (
+        abs(ball.xcor() - paddle.xcor()) < 50 and
+        abs(ball.ycor() - paddle.ycor()) < 20 and
+        ball.y_move < 0  # Only bounce if ball is moving downward
+    ):
+        ball.redirect_from_paddle(paddle)
 
     # Detect collision with blocks
     for block in blocks[:]:
-        if ball.distance(block) < 50:
+        if ball.distance(block) < 40:
             blocks.remove(block)
             block.hideturtle()
             block.goto(1000, 1000)
             counter += 1
-            if counter % 3 == 0:
+            if counter % 2 == 0:
                 time_sleep *= 0.91
-                print(time_sleep)
             ball.bounce_y()
             break
+
 
 screen.exitonclick()
