@@ -25,7 +25,7 @@ A simple Breakout game built with Python using the `turtle` graphics module. Smo
 2. Clone this repository:
 
 ```bash
-git clone https://github.com/your-username/Breakout-Game.git
+git clone https://github.com/Hesoom/Block-Breaker.git
 cd Breakout-Game
 ```
 ### Run the game:
